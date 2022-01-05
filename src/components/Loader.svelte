@@ -1,5 +1,5 @@
 <script>
-  export let error;
+  export let error = false;
 </script>
 
 <div class="loaderV2 {error ? 'error' : ''}" />
