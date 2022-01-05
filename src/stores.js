@@ -8,6 +8,8 @@ export const appStore = writable({
       hide: "Alt+CommandOrControl+H",
     },
   },
+  isOverlayVisible: false,
+  isLoading: false,
   flags: [
     "./static/flag/flag0.png",
     "./static/flag/flag1.png",

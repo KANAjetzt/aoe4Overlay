@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import { fly, slide, fade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { appStore, players, match } from "./../stores.js";
@@ -6,16 +7,19 @@
   import MatchInfo from "./MatchInfo.svelte";
   import Player from "./Player.svelte";
 
-  let isOverlayVisible = false;
+  onMount(() => {
+    window.electron.on("refresh", () => {
+      refreshData();
+    });
+  });
 
   const getMatchData = async (profileId) => {
     // get match data
-
     const currentMatch = await fetch(
       `https://aoeiv.net/api/player/matches?game=aoe4&profile_id=${profileId}&count=1`
     );
-
     console.log(currentMatch);
+
     if (!currentMatch.ok) {
       throw Error(currentMatch.statusText);
     }
@@ -23,6 +27,7 @@
     const matchData = currentMatchData[0];
 
     $match = {
+      id: matchData.match_id,
       map: $appStore.maps[matchData.map_type],
       server: matchData.server,
       player0: {
@@ -61,35 +66,72 @@
   };
 
   const getData = async () => {
-    console.log($appStore);
     await getMatchData($appStore.settings.playerId);
-    console.log($match);
     // get player0 data
     await getPlayerData($match.player0.id);
     $players[0].civ = $match.player0.civ;
-    console.log($players);
     // get player1 data
     await getPlayerData($match.player1.id);
     $players[1].civ = $match.player1.civ;
-    console.log($players);
+  };
+
+  const refreshData = async () => {
+    // toggle on loader
+    $appStore.isLoading = true;
+
+    // try to get new data for some amount of time
+    const oldData = { ...$match };
+    const maxTime = 60; //sec
+    const interval = 5; //sec
+    let counter = 0;
+
+    const intervalId = setInterval(async () => {
+      await getMatchData($appStore.settings.playerId);
+
+      // if its old data
+      if ($match.id === oldData.id) {
+        // if maxTime is over
+        if (counter >= maxTime / interval) {
+          // toggle off loader
+          $appStore.isLoading = false;
+          // reset counter
+          counter = 0;
+          // stop searching for data
+          clearInterval(intervalId);
+        }
+
+        // else increase counter
+        counter++;
+        // and try again
+        return;
+      }
+
+      // if its new data
+      // get player0 data
+      await getPlayerData($match.player0.id);
+      $players[0].civ = $match.player0.civ;
+      // get player1 data
+      await getPlayerData($match.player1.id);
+      $players[1].civ = $match.player1.civ;
+
+      // toggle off loader
+      $appStore.isLoading = false;
+      // reset counter
+      counter = 0;
+      // stop searching for data
+      clearInterval(intervalId);
+    }, 1000 * interval);
   };
 </script>
 
 <main class="overlay">
   {#await getData()}
-    <div
-      class="loader"
-      out:slide|local={{
-        duration: 1000,
-      }}
-      on:outroend={() => {
-        isOverlayVisible = true;
-      }}
-    >
-      <Loader />
-    </div>
+    <Loader />
   {:then}
-    {#if isOverlayVisible}
+    {#if $appStore.isOverlayVisible}
+      {#if $appStore.isLoading}
+        <Loader />
+      {/if}
       <div
         class="player0"
         in:fly|local={{

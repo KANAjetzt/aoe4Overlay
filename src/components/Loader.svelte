@@ -1,8 +1,21 @@
 <script>
+  import { slide } from "svelte/transition";
+  import { quintOut } from "svelte/easing";
+  import { appStore } from "../stores";
+
   export let error = false;
 </script>
 
-<div class="loaderV2 {error ? 'error' : ''}" />
+<div
+  transition:slide|local={{
+    duration: 300,
+    easing: quintOut,
+  }}
+  on:outroend={() => {
+    $appStore.isOverlayVisible = true;
+  }}
+  class="loaderV2 {error ? 'error' : ''}"
+/>
 
 <style>
   /* Loader V2 */

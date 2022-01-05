@@ -75,8 +75,13 @@ function createWindow() {
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
 
-  // Reload on shortcut press
+  // Get new data
   globalShortcut.register("Alt+CommandOrControl+R", () => {
+    mainWindow.webContents.send("refresh");
+  });
+
+  // Reload on shortcut press (dev)
+  globalShortcut.register("Alt+CommandOrControl+W", () => {
     mainWindow.reload();
   });
 
