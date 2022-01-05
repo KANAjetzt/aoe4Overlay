@@ -3,37 +3,48 @@ const { app, BrowserWindow, globalShortcut } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
-// function handleSettings() {
-//   const settings = {
-//     profileId: null,
-//     hotkeys: {
-//       refresh: "Alt+CommandOrControl+R",
-//       hide: "Alt+CommandOrControl+H",
-//     },
-//   };
+function handleSettings() {
+  // Check if settings file exists
+  const isSettingsFile = fs
+    .readdirSync(`${__dirname}`)
+    .includes("settings.json");
 
-//   // Create the browser window.
-//   const settingsWindow = new BrowserWindow({
-//     width: 1030,
-//     height: 800,
-//     webPreferences: {
-//       preload: path.join(__dirname, "preload.js"),
-//     },
-//   });
+  // if its there return and open main window
+  if (isSettingsFile) {
+    return;
+  }
 
-//   settingsWindow.loadFile("settings.html");
+  // Else Open Settings Window
+  const settings = {
+    profileId: null,
+    hotkeys: {
+      refresh: "Alt+CommandOrControl+R",
+      hide: "Alt+CommandOrControl+H",
+    },
+  };
 
-//   settingsWindow.webContents.openDevTools();
+  // Create the browser window.
+  const settingsWindow = new BrowserWindow({
+    width: 1030,
+    height: 800,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
 
-//   // check for settings file
-//   if (!settings) {
-//     // open settings window
-//     // create settings file
-//     // fs.writeFileSync(`${dirname}/settings.json`, JSON.stringify(settings));
-//   } else {
-//     // load settings
-//   }
-// }
+  settingsWindow.loadFile(`${__dirname}/public/index.html`);
+
+  settingsWindow.webContents.openDevTools();
+
+  // check for settings file
+  if (!settings) {
+    // open settings window
+    // create settings file
+    // fs.writeFileSync(`${dirname}/settings.json`, JSON.stringify(settings));
+  } else {
+    // load settings
+  }
+}
 
 function createWindow() {
   // We cannot require the screen module until the app is ready.
