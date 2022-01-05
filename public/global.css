@@ -1,0 +1,19 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  overflow: hidden;
+  min-width: 1030px;
+  min-height: 80px;
+  background: transparent;
+}
+
+p,
+h2,
+li {
+  font-family: sans-serif;
+  color: #eee;
+}

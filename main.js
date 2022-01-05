@@ -1,6 +1,39 @@
 // Modules to control application life and create native browser window
 const { app, BrowserWindow, globalShortcut } = require("electron");
 const path = require("path");
+const fs = require("fs");
+
+// function handleSettings() {
+//   const settings = {
+//     profileId: null,
+//     hotkeys: {
+//       refresh: "Alt+CommandOrControl+R",
+//       hide: "Alt+CommandOrControl+H",
+//     },
+//   };
+
+//   // Create the browser window.
+//   const settingsWindow = new BrowserWindow({
+//     width: 1030,
+//     height: 800,
+//     webPreferences: {
+//       preload: path.join(__dirname, "preload.js"),
+//     },
+//   });
+
+//   settingsWindow.loadFile("settings.html");
+
+//   settingsWindow.webContents.openDevTools();
+
+//   // check for settings file
+//   if (!settings) {
+//     // open settings window
+//     // create settings file
+//     // fs.writeFileSync(`${dirname}/settings.json`, JSON.stringify(settings));
+//   } else {
+//     // load settings
+//   }
+// }
 
 function createWindow() {
   // We cannot require the screen module until the app is ready.
@@ -26,7 +59,7 @@ function createWindow() {
   mainWindow.setIgnoreMouseEvents(true);
 
   // and load the index.html of the app.
-  mainWindow.loadFile("index.html");
+  mainWindow.loadFile(`${__dirname}/public/index.html`);
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
@@ -51,6 +84,9 @@ function createWindow() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  // handle Settings
+  // handleSettings();
+
   createWindow();
 
   mainWindow.app.on("activate", function () {
