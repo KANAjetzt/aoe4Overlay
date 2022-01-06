@@ -2,8 +2,6 @@
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { appStore } from "../stores";
-
-  export let error = false;
 </script>
 
 <div
@@ -12,9 +10,9 @@
     easing: quintOut,
   }}
   on:outroend={() => {
-    $appStore.isOverlayVisible = true;
+    $appStore.isLoading = false;
   }}
-  class="loaderV2 {error ? 'error' : ''}"
+  class="loaderV2 {$appStore.isLoadingError ? 'error' : ''}"
 />
 
 <style>
@@ -86,7 +84,7 @@
       transparent 60%
     );
     background-position: 50%;
-    animation: none;
+    animation: shake 0.7s ease-in-out;
   }
 
   @keyframes loaderV2 {
@@ -95,6 +93,24 @@
     }
     100% {
       background-position: -30%;
+    }
+  }
+
+  @keyframes shake {
+    from,
+    to {
+      transform: translate3d(0, 0, 0);
+      background-position: 50%;
+    }
+
+    20%,
+    60% {
+      background-position: 47%;
+    }
+
+    40%,
+    80% {
+      background-position: 53%;
     }
   }
 </style>

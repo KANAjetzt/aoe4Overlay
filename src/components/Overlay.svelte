@@ -21,8 +21,13 @@
     console.log(currentMatch);
 
     if (!currentMatch.ok) {
+      // Toggle error loader state
+      $appStore.isLoadingError = true;
+
       throw Error(currentMatch.statusText);
     }
+    // Toggle error loader state
+    $appStore.isLoadingError = false;
     const currentMatchData = await currentMatch.json();
     const matchData = currentMatchData[0];
 
@@ -66,6 +71,8 @@
   };
 
   const getData = async () => {
+    // toggle on loader
+    $appStore.isLoading = true;
     await getMatchData($appStore.settings.playerId);
     // get player0 data
     await getPlayerData($match.player0.id);
@@ -73,6 +80,10 @@
     // get player1 data
     await getPlayerData($match.player1.id);
     $players[1].civ = $match.player1.civ;
+
+    // toggle off loader
+    // $appStore.isLoading = false;
+    // is happening on outroend in the loader component
   };
 
   const refreshData = async () => {
@@ -81,7 +92,7 @@
 
     // try to get new data for some amount of time
     const oldData = { ...$match };
-    const maxTime = 60; //sec
+    const maxTime = 10; //sec
     const interval = 5; //sec
     let counter = 0;
 
@@ -92,12 +103,16 @@
       if ($match.id === oldData.id) {
         // if maxTime is over
         if (counter >= maxTime / interval) {
-          // toggle off loader
-          $appStore.isLoading = false;
-          // reset counter
-          counter = 0;
-          // stop searching for data
-          clearInterval(intervalId);
+          // Toggle error loader state
+          $appStore.isLoadingError = true;
+          setTimeout(() => {
+            // toggle off loader
+            $appStore.isLoading = false;
+            // reset counter
+            counter = 0;
+            // stop searching for data
+            clearInterval(intervalId);
+          }, 700);
         }
 
         // else increase counter
@@ -128,15 +143,14 @@
   {#await getData()}
     <Loader />
   {:then}
-    {#if $appStore.isOverlayVisible}
-      {#if $appStore.isLoading}
-        <Loader />
-      {/if}
+    {#if $appStore.isLoading}
+      <Loader />
+    {:else}
       <div
         class="player0"
-        in:fly|local={{
+        transition:fly|local={{
           duration: 2000,
-          x: -300,
+          x: -600,
           y: 0,
           opacity: 1.0,
           easing: quintOut,
@@ -144,14 +158,14 @@
       >
         <Player index={0} />
       </div>
-      <div class="matchInfo" in:fade|local={{ duration: 3000 }}>
+      <div class="matchInfo" transition:fade|local={{ duration: 3000 }}>
         <MatchInfo />
       </div>
       <div
         class="player1"
-        in:fly|local={{
+        transition:fly|local={{
           duration: 2000,
-          x: 300,
+          x: 600,
           y: 0,
           opacity: 1.0,
           easing: quintOut,
@@ -162,7 +176,7 @@
     {/if}
   {:catch error}
     <p class="error">{error.message}</p>
-    <Loader error={true} />
+    <Loader />
   {/await}
 </main>
 
