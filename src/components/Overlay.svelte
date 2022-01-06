@@ -92,7 +92,7 @@
 
     // try to get new data for some amount of time
     const oldData = { ...$match };
-    const maxTime = 10; //sec
+    const maxTime = 60; //sec
     const interval = 5; //sec
     let counter = 0;
 
