@@ -1,9 +1,16 @@
+@font-face {
+  font-family: Merriweather;
+  src: url("./static/fonts/Merriweather/Merriweather-Regular.ttf");
+}
+
 * {
   margin: 0;
   padding: 0;
 }
 
-html,
+html {
+}
+
 body {
   overflow: hidden;
   min-width: 1030px;
@@ -13,7 +20,13 @@ body {
 
 p,
 h2,
-li {
+li,
+input {
   font-family: sans-serif;
   color: #eee;
+}
+
+input::placeholder {
+  font-family: sans-serif;
+  color: rgba(238, 238, 238, 0.8);
 }

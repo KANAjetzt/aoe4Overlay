@@ -2,18 +2,22 @@
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { appStore } from "../stores";
+
+  export let style = "";
 </script>
 
-<div
-  transition:slide|local={{
-    duration: 300,
-    easing: quintOut,
-  }}
-  on:outroend={() => {
-    $appStore.isLoading = false;
-  }}
-  class="loaderV2 {$appStore.isLoadingError ? 'error' : ''}"
-/>
+{#if $appStore.isLoading}
+  <div
+    transition:slide|local={{
+      duration: 300,
+      easing: quintOut,
+    }}
+    on:outroend={() => {
+      $appStore.isLoading = false;
+    }}
+    class="loaderV2 {$appStore.isLoadingError ? 'error' : ''} {style}"
+  />
+{/if}
 
 <style>
   /* Loader V2 */
@@ -70,6 +74,15 @@
     background-size: 400% 400%;
     animation: loaderV2 3s ease infinite;
     animation-delay: 2s;
+  }
+
+  .searchBar {
+    width: 21%;
+    height: 3px;
+  }
+  .searchBar::after,
+  .searchBar::before {
+    height: 3px;
   }
 
   .error,

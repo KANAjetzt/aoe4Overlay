@@ -8,6 +8,8 @@ export const appStore = writable({
       hide: "Alt+CommandOrControl+H",
     },
   },
+  currentWindow: "settings",
+  isPlayerPreviewVisible: false,
   isOverlayVisible: true,
   isLoading: false,
   isLoadingError: false,
@@ -54,7 +56,6 @@ export const players = writable([]);
 //     wins: 17,
 //     losses: 20,
 //     winRate: 46,
-//     civ: 7,
 //   },
 //   {
 //     name: "ZipfelKuh",

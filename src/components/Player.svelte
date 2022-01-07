@@ -5,15 +5,19 @@
 </script>
 
 <div
-  class="player player{index}"
-  style={`background-image: url(static/bg/bg${$players[index].civ}.png)`}
+  class="player player{index} {$players[index].civ ? '' : 'noCiv'}"
+  style={$players[index].civ
+    ? `background-image: url(static/bg/bg${$players[index].civ}.png)`
+    : ""}
 >
-  <div class="flag">
-    <img
-      src={$appStore.flags[$players[index].civ]}
-      alt={`civFlagPlayer${index}`}
-    />
-  </div>
+  {#if $players[index].civ}
+    <div class="flag">
+      <img
+        src={$appStore.flags[$players[index].civ]}
+        alt={`civFlagPlayer${index}`}
+      />
+    </div>
+  {/if}
   <h2 class="playerName">{$players[index].name}</h2>
   <div class="stats">
     <ul>
@@ -100,5 +104,9 @@
 
   .player1 .flag {
     grid-column: 2 / 3;
+  }
+
+  .noCiv {
+    grid-template-rows: 1fr;
   }
 </style>

@@ -3,6 +3,10 @@ const { app, BrowserWindow, globalShortcut } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
+try {
+  require("electron-reloader")(module);
+} catch (_) {}
+
 function handleSettings() {
   // Check if settings file exists
   const isSettingsFile = fs
@@ -27,6 +31,7 @@ function handleSettings() {
   const settingsWindow = new BrowserWindow({
     width: 1030,
     height: 800,
+    frame: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -101,9 +106,9 @@ function createWindow() {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // handle Settings
-  // handleSettings();
+  handleSettings();
 
-  createWindow();
+  // createWindow();
 
   mainWindow.app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
