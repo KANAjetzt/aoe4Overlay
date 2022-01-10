@@ -45,7 +45,10 @@ async function createSettingsWindow() {
     const settings = JSON.stringify(args);
 
     try {
-      await asyncWriteFile(`${__dirname}/settings.json`, settings);
+      await asyncWriteFile(
+        `${app.getPath("userData")}/settings.json`,
+        settings
+      );
 
       setTimeout(async () => {
         settingsWindow.hide();
@@ -67,7 +70,9 @@ async function createSettingsWindow() {
 
 async function createWindow() {
   // Load settings
-  const settingsFile = await asyncReadFile(`${__dirname}/settings.json`);
+  const settingsFile = await asyncReadFile(
+    `${app.getPath("userData")}/settings.json`
+  );
   settings = JSON.parse(settingsFile);
 
   // We cannot require the screen module until the app is ready.
@@ -133,7 +138,7 @@ async function createWindow() {
 app.whenReady().then(async () => {
   // Check if settings file exists
   const isSettingsFile = fs
-    .readdirSync(`${__dirname}`)
+    .readdirSync(app.getPath("userData"))
     .includes("settings.json");
 
   // if its there

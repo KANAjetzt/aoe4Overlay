@@ -43,24 +43,46 @@
       server: matchData.server,
       player0: {
         id: matchData.players[0].profile_id,
+        name: matchData.players[0].name,
         civ: matchData.players[0].civ,
       },
       player1: {
         id: matchData.players[1].profile_id,
+        name: matchData.players[1].name,
         civ: matchData.players[1].civ,
       },
     };
   };
 
-  const getPlayerData = async (profileId) => {
+  // TODO: Use index of player insted of profileId and name
+  const getPlayerData = async (profileId, name) => {
     // get player data
     const playerDataRes = await fetch(
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&start=1&count=1&profile_id=${profileId}`
     );
+
+    if (!playerDataRes.ok) {
+      // Toggle error loader state
+      $appStore.isLoadingError = true;
+
+      throw Error(playerDataRes.statusText);
+    }
+
+    // Toggle error loader state
+    $appStore.isLoadingError = false;
+
     const playerData = await playerDataRes.json();
+
     const player = playerData.leaderboard[0];
 
-    const { name, rank, rating: elo, games, wins, losses } = player;
+    if (!player) {
+      // Toggle error loader state
+      $appStore.isLoadingError = true;
+
+      throw Error(`no leaderboard Data for ${name}`);
+    }
+
+    const { rank, rating: elo, games, wins, losses } = player;
 
     // win rate
     const winRate = Math.round((100 * wins) / games);
@@ -81,10 +103,10 @@
     $appStore.isLoading = true;
     await getMatchData($appStore.settings.playerId);
     // get player0 data
-    await getPlayerData($match.player0.id);
+    await getPlayerData($match.player0.id, $match.player0.name);
     $players[0].civ = $match.player0.civ;
     // get player1 data
-    await getPlayerData($match.player1.id);
+    await getPlayerData($match.player1.id, $match.player1.name);
     $players[1].civ = $match.player1.civ;
 
     // toggle off loader
