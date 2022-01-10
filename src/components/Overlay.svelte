@@ -18,7 +18,6 @@
     const currentMatch = await fetch(
       `https://aoeiv.net/api/player/matches?game=aoe4&profile_id=${profileId}&count=1`
     );
-    console.log(currentMatch);
 
     if (!currentMatch.ok) {
       // Toggle error loader state
@@ -30,7 +29,13 @@
     $appStore.isLoadingError = false;
     const currentMatchData = await currentMatch.json();
     const matchData = currentMatchData[0];
-    console.log(matchData);
+
+    // if it's not 1v1
+    if (matchData.num_players > 2) {
+      $appStore.isLoadingError = true;
+
+      throw Error("sorry currently only 1v1 is supported");
+    }
 
     $match = {
       id: matchData.match_id,
@@ -52,10 +57,8 @@
     const playerDataRes = await fetch(
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&start=1&count=1&profile_id=${profileId}`
     );
-    console.log(playerDataRes);
     const playerData = await playerDataRes.json();
     const player = playerData.leaderboard[0];
-    console.log(player);
 
     const { name, rank, rating: elo, games, wins, losses } = player;
 
