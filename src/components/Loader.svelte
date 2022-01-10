@@ -6,18 +6,16 @@
   export let style = "";
 </script>
 
-{#if $appStore.isLoading}
-  <div
-    transition:slide|local={{
-      duration: 300,
-      easing: quintOut,
-    }}
-    on:outroend={() => {
-      $appStore.isLoading = false;
-    }}
-    class="loaderV2 {$appStore.isLoadingError ? 'error' : ''} {style}"
-  />
-{/if}
+<div
+  transition:slide|local={{
+    duration: 300,
+    easing: quintOut,
+  }}
+  on:outroend={() => {
+    $appStore.isLoading = false;
+  }}
+  class="loaderV2 {$appStore.isLoadingError ? 'error' : ''} {style}"
+/>
 
 <style>
   /* Loader V2 */

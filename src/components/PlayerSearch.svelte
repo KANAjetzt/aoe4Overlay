@@ -6,21 +6,42 @@
   import Player from "./Player.svelte";
 
   let playerName = null;
-  let isOutroDone = false;
 
   const getPlayerData = async () => {
+    // Reset error Loadingbar
+    $appStore.isLoadingError = false;
+
     // Show loading bar
     $appStore.isLoading = true;
 
     // Reset players
     $players = [];
 
+    // Reset no player found
+    $appStore.isNoPlayerFound = false;
+
     // search for player
     const playerDataRes = await fetch(
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&search=${playerName}&start=1&count=1`
     );
+    console.log(playerDataRes);
     const playerData = await playerDataRes.json();
+    console.log(playerData);
     const player = playerData.leaderboard[0];
+
+    // if no player was found
+    if (!player) {
+      // Show error Loadingbar
+      $appStore.isLoadingError = true;
+
+      // Show error message
+      $appStore.isNoPlayerFound = true;
+
+      // show player selection
+      $appStore.isPlayerPreviewVisible = true;
+
+      return;
+    }
 
     const {
       profile_id: id,
@@ -65,13 +86,15 @@
       setTimeout(() => {
         // search player
         getPlayerData();
-      }, 305);
+      }, 400);
     }
   };
 </script>
 
 <div class="searchBar">
-  <Loader style="searchBar" />
+  {#if $appStore.isLoading}
+    <Loader style="searchBar" />
+  {/if}
   <input
     type="text"
     name="playerName"
@@ -87,6 +110,7 @@
   />
   <button class="btnSearch" on:click={handleSearchBtnClick} />
 </div>
+
 {#if $appStore.isPlayerPreviewVisible && $players[0]}
   <div
     class="playerSelection"
@@ -168,7 +192,6 @@
   .btnPlayerSelect {
     padding: 10px;
     background: #0000005c;
-    border: none;
     border-width: 3px 4px 3px 4px;
     border-image-slice: 7;
     border-image-source: linear-gradient(

@@ -1,16 +1,25 @@
 <script>
+  import { onMount } from "svelte";
   import { appStore, players } from "./../stores.js";
 
   export let index;
+
+  let isCiv = Object.hasOwn($players[index], "civ");
+
+  onMount(() => {
+    // check for civ
+    if (!isCiv) return;
+
+    // set background image
+    document.documentElement.style.setProperty(
+      `--bgPlayer${index}`,
+      `url(../static/bg/bg${$players[index].civ}.png)`
+    );
+  });
 </script>
 
-<div
-  class="player player{index} {$players[index].civ ? '' : 'noCiv'}"
-  style={$players[index].civ
-    ? `background-image: url(static/bg/bg${$players[index].civ}.png)`
-    : ""}
->
-  {#if $players[index].civ}
+<div class="player player{index} {isCiv ? `` : 'noCiv'}">
+  {#if isCiv}
     <div class="flag">
       <img
         src={$appStore.flags[$players[index].civ]}
@@ -78,10 +87,12 @@
 
   .player0 {
     grid-template-columns: 1fr 3fr;
+    background-image: var(--bgPlayer0);
   }
 
   .player1 {
     grid-template-columns: 3fr 1fr;
+    background-image: var(--bgPlayer1);
   }
 
   .playerName {

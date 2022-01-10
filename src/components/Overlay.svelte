@@ -30,6 +30,7 @@
     $appStore.isLoadingError = false;
     const currentMatchData = await currentMatch.json();
     const matchData = currentMatchData[0];
+    console.log(matchData);
 
     $match = {
       id: matchData.match_id,
@@ -51,8 +52,10 @@
     const playerDataRes = await fetch(
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&start=1&count=1&profile_id=${profileId}`
     );
+    console.log(playerDataRes);
     const playerData = await playerDataRes.json();
     const player = playerData.leaderboard[0];
+    console.log(player);
 
     const { name, rank, rating: elo, games, wins, losses } = player;
 

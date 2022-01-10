@@ -1,37 +1,32 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, globalShortcut } = require("electron");
+const { app, BrowserWindow, globalShortcut, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { promisify } = require("util");
 
-try {
-  require("electron-reloader")(module);
-} catch (_) {}
+const asyncWriteFile = promisify(fs.writeFile);
+const asyncReadFile = promisify(fs.readFile);
 
-function handleSettings() {
-  // Check if settings file exists
-  const isSettingsFile = fs
-    .readdirSync(`${__dirname}`)
-    .includes("settings.json");
+let settings = {
+  profileId: null,
+  hotkeys: {
+    refresh: "Alt+CommandOrControl+R",
+    hide: "Alt+CommandOrControl+H",
+  },
+};
 
-  // if its there return and open main window
-  if (isSettingsFile) {
-    return;
-  }
+// auto reload reloads the page when I invoke something from render?!
+// try {
+//   require("electron-reloader")(module);
+// } catch (_) {}
 
-  // Else Open Settings Window
-  const settings = {
-    profileId: null,
-    hotkeys: {
-      refresh: "Alt+CommandOrControl+R",
-      hide: "Alt+CommandOrControl+H",
-    },
-  };
-
+async function createSettingsWindow() {
   // Create the browser window.
   const settingsWindow = new BrowserWindow({
     width: 1030,
     height: 800,
-    frame: true,
+    frame: false,
+    resizable: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -39,19 +34,42 @@ function handleSettings() {
 
   settingsWindow.loadFile(`${__dirname}/public/index.html`);
 
-  settingsWindow.webContents.openDevTools();
+  // settingsWindow.webContents.openDevTools();
 
-  // check for settings file
-  if (!settings) {
-    // open settings window
-    // create settings file
-    // fs.writeFileSync(`${dirname}/settings.json`, JSON.stringify(settings));
-  } else {
-    // load settings
-  }
+  settingsWindow.on("ready-to-show", () => {
+    // Send settings
+    settingsWindow.webContents.send("sendSettings", settings);
+  });
+
+  ipcMain.handle("settings", async (e, args) => {
+    const settings = JSON.stringify(args);
+
+    try {
+      await asyncWriteFile(`${__dirname}/settings.json`, settings);
+
+      setTimeout(async () => {
+        settingsWindow.hide();
+        createWindow();
+      }, 500);
+
+      return {
+        status: "success",
+        message: "Settings file saved!",
+      };
+    } catch (error) {
+      return {
+        status: "error",
+        message: `${error}`,
+      };
+    }
+  });
 }
 
-function createWindow() {
+async function createWindow() {
+  // Load settings
+  const settingsFile = await asyncReadFile(`${__dirname}/settings.json`);
+  settings = JSON.parse(settingsFile);
+
   // We cannot require the screen module until the app is ready.
   const { screen } = require("electron");
 
@@ -76,12 +94,15 @@ function createWindow() {
 
   // and load the index.html of the app.
   mainWindow.loadFile(`${__dirname}/public/index.html`);
+  // Make sure its visible
+  mainWindow.showInactive();
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
+  // ### Hotkeys ###
   // Get new data
-  globalShortcut.register("Alt+CommandOrControl+R", () => {
+  globalShortcut.register(settings.hotkeys.refresh, () => {
     mainWindow.webContents.send("refresh");
   });
 
@@ -90,7 +111,7 @@ function createWindow() {
     mainWindow.reload();
   });
 
-  globalShortcut.register("Alt+CommandOrControl+H", () => {
+  globalShortcut.register(settings.hotkeys.hide, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
       console.log("hide window");
@@ -99,21 +120,33 @@ function createWindow() {
       console.log("show window");
     }
   });
+
+  mainWindow.on("ready-to-show", () => {
+    // Send settings
+    mainWindow.webContents.send("sendSettings", settings);
+  });
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
-  // handle Settings
-  handleSettings();
+app.whenReady().then(async () => {
+  // Check if settings file exists
+  const isSettingsFile = fs
+    .readdirSync(`${__dirname}`)
+    .includes("settings.json");
 
-  // createWindow();
+  // if its there
+  if (isSettingsFile) {
+    // Open main window
+    createWindow();
+    // Else open settings window
+  } else {
+    createSettingsWindow();
+  }
 
-  mainWindow.app.on("activate", function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  ipcMain.handle("close", () => {
+    app.quit();
   });
 });
 

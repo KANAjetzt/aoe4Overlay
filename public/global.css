@@ -9,6 +9,8 @@
 }
 
 html {
+  --bgPlayer0: "";
+  --bgPlayer1: "";
 }
 
 body {
@@ -21,7 +23,8 @@ body {
 p,
 h2,
 li,
-input {
+input,
+label {
   font-family: sans-serif;
   color: #eee;
 }

@@ -2,14 +2,15 @@ import { writable, derived } from "svelte/store";
 
 export const appStore = writable({
   settings: {
-    playerId: 7257105,
+    playerId: null,
     hotkeys: {
-      refresh: "Alt+CommandOrControl+R",
-      hide: "Alt+CommandOrControl+H",
+      refresh: "Alt+Control+R",
+      hide: "Alt+Control+H",
     },
   },
-  currentWindow: "settings",
+  currentWindow: "main",
   isPlayerPreviewVisible: false,
+  isNoPlayerFound: false,
   isOverlayVisible: true,
   isLoading: false,
   isLoadingError: false,
