@@ -87,7 +87,6 @@ async function createWindow() {
     height: 80,
     x: width * 0.5 - 1030 * 0.5,
     y: 0,
-    alwaysOnTop: true,
     frame: false,
     transparent: true,
     webPreferences: {
@@ -95,6 +94,7 @@ async function createWindow() {
     },
   });
 
+  mainWindow.setAlwaysOnTop(true, "normal");
   mainWindow.setIgnoreMouseEvents(true);
 
   // and load the index.html of the app.
@@ -119,10 +119,8 @@ async function createWindow() {
   globalShortcut.register(settings.hotkeys.hide, () => {
     if (mainWindow.isVisible()) {
       mainWindow.hide();
-      console.log("hide window");
     } else {
       mainWindow.showInactive();
-      console.log("show window");
     }
   });
 
