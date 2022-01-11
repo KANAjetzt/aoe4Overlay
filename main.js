@@ -103,7 +103,8 @@ async function createWindow() {
   mainWindow.showInactive();
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // TODO: If I keep working on this - add .env file
+  // mainWindow.webContents.openDevTools();
 
   // ### Hotkeys ###
   // Get new data
@@ -112,9 +113,9 @@ async function createWindow() {
   });
 
   // Reload on shortcut press (dev)
-  globalShortcut.register("Alt+CommandOrControl+W", () => {
-    mainWindow.reload();
-  });
+  // globalShortcut.register("Alt+CommandOrControl+W", () => {
+  //   mainWindow.reload();
+  // });
 
   globalShortcut.register(settings.hotkeys.hide, () => {
     if (mainWindow.isVisible()) {

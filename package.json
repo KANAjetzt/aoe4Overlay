@@ -1,6 +1,8 @@
 {
   "name": "aoe4Overlay",
+  "author": "Kai Roth",
   "version": "1.0.0",
+  "description": "Overlay for Age of Empires 4. To display leaderboard data of the players currently in the match.",
   "private": true,
   "main": "main.js",
   "scripts": {
