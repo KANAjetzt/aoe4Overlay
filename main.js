@@ -103,7 +103,7 @@ async function createWindow() {
   mainWindow.showInactive();
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
   // ### Hotkeys ###
   // Get new data
@@ -121,6 +121,11 @@ async function createWindow() {
       mainWindow.hide();
     } else {
       mainWindow.showInactive();
+      // If the user hits win + d to go to desktop
+      // and then hits the hide / show key 2 times
+      // the app is not sizes correctly.
+      // So we fix this by setting the size again
+      mainWindow.setSize(1030, 80);
     }
   });
 
