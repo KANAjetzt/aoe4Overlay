@@ -9,7 +9,8 @@
 </h1>
 
 <h2 align="center">Overview</h2>
-<p align="center">📈 Easy to install and use Age of Empires 4 in game overlay - to display your and your oponents leaderboard stats. 📈</p>
+<p align="center">📈 Easy to install and use Age of Empires 4 in game overlay, 
+  <br />  To display your and your oponents leaderboard stats. 📈</p>
 <p align="center">  GL HF! </p>
 <img alt="GIF 1 overlay window" src="https://res.cloudinary.com/kana/video/upload/e_loop:2/v1642000779/2022-01-12_16-18-41_coqwpm.gif">
 <img alt="Screen Shot 1 settings window" src="https://res.cloudinary.com/kana/image/upload/v1641982119/readme01_und5gl.png">
