@@ -88,7 +88,7 @@
     const winRate = Math.round((100 * wins) / games);
 
     $players.push({
-      name,
+      name: player.name,
       rank,
       elo,
       games,
@@ -101,6 +101,13 @@
   const getData = async () => {
     // toggle on loader
     $appStore.isLoading = true;
+
+    // clear match store
+    $match = {};
+
+    // clear players sotre
+    $players = [];
+
     await getMatchData($appStore.settings.playerId);
     // get player0 data
     await getPlayerData($match.player0.id, $match.player0.name);
@@ -110,8 +117,7 @@
     $players[1].civ = $match.player1.civ;
 
     // toggle off loader
-    // $appStore.isLoading = false;
-    // is happening on outroend in the loader component
+    $appStore.isLoading = false;
   };
 
   const refreshData = async () => {
@@ -152,12 +158,8 @@
       }
 
       // if its new data
-      // get player0 data
-      await getPlayerData($match.player0.id);
-      $players[0].civ = $match.player0.civ;
-      // get player1 data
-      await getPlayerData($match.player1.id);
-      $players[1].civ = $match.player1.civ;
+      // get new data
+      getData();
 
       // toggle off loader
       $appStore.isLoading = false;
@@ -175,7 +177,7 @@
   {:then}
     {#if $appStore.isLoading}
       <Loader />
-    {:else}
+    {:else if $appStore.isLoadingOutroEnd}
       <div
         class="player0"
         transition:fly|local={{
@@ -188,7 +190,11 @@
       >
         <Player index={0} />
       </div>
-      <div class="matchInfo" transition:fade|local={{ duration: 3000 }}>
+      <div
+        class="matchInfo"
+        in:fade|local={{ duration: 3000 }}
+        out:fade|local={{ duration: 300 }}
+      >
         <MatchInfo />
       </div>
       <div

@@ -13,6 +13,7 @@ export const appStore = writable({
   isNoPlayerFound: false,
   isOverlayVisible: true,
   isLoading: false,
+  isLoadingOutroEnd: false,
   isLoadingError: false,
   flags: [
     "./static/flag/flag0.png",

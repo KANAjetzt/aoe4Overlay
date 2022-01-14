@@ -1,9 +1,14 @@
 <script>
+  import { onMount } from "svelte";
   import { slide } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { appStore } from "../stores";
 
   export let style = "";
+
+  onMount(() => {
+    $appStore.isLoadingOutroEnd = false;
+  });
 </script>
 
 <div
@@ -12,7 +17,7 @@
     easing: quintOut,
   }}
   on:outroend={() => {
-    $appStore.isLoading = false;
+    $appStore.isLoadingOutroEnd = true;
   }}
   class="loaderV2 {$appStore.isLoadingError ? 'error' : ''} {style}"
 />
