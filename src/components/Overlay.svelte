@@ -161,8 +161,6 @@
       // get new data
       getData();
 
-      // toggle off loader
-      $appStore.isLoading = false;
       // reset counter
       counter = 0;
       // stop searching for data
