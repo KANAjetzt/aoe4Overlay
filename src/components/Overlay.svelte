@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { fly, slide, fade } from "svelte/transition";
+  import { fly, fade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
   import { appStore, players, match } from "./../stores.js";
   import Loader from "./Loader.svelte";
@@ -8,35 +8,39 @@
   import Player from "./Player.svelte";
 
   onMount(() => {
+    getData();
+
     window.electron.on("refresh", () => {
       refreshData();
     });
   });
 
-  const getMatchData = async (profileId) => {
+  const getMatchData = async (profileId, intervalId, previousMatchId) => {
     // get match data
     const currentMatch = await fetch(
       `https://aoeiv.net/api/player/matches?game=aoe4&profile_id=${profileId}&count=1`
     );
 
+    // If request fails
     if (!currentMatch.ok) {
       // Toggle error loader state
       $appStore.isLoadingError = true;
+      $appStore.isError = true;
+      $appStore.errorMessage = currentMatch.statusText;
+
+      if (intervalId) {
+        // stop interval
+        clearInterval(intervalId);
+      }
+
+      $match = {};
 
       throw Error(currentMatch.statusText);
     }
-    // Toggle error loader state
-    $appStore.isLoadingError = false;
     const currentMatchData = await currentMatch.json();
     const matchData = currentMatchData[0];
 
-    // if it's not 1v1
-    if (matchData.num_players > 2) {
-      $appStore.isLoadingError = true;
-
-      throw Error("sorry currently only 1v1 is supported");
-    }
-
+    // Save Match data in store
     $match = {
       id: matchData.match_id,
       map: $appStore.maps[matchData.map_type],
@@ -52,6 +56,19 @@
         civ: matchData.players[1].civ,
       },
     };
+
+    // if it's not 1v1 and new Data
+    if (matchData.num_players > 2 && matchData.match_id !== previousMatchId) {
+      // Toggle error loader state
+      $appStore.isLoadingError = true;
+      $appStore.isError = true;
+      $appStore.errorMessage = "sorry currently only 1v1 is supported";
+
+      // stop interval
+      clearInterval(intervalId);
+
+      throw Error("sorry currently only 1v1 is supported");
+    }
   };
 
   // TODO: Use index of player insted of profileId and name
@@ -61,23 +78,25 @@
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&start=1&count=1&profile_id=${profileId}`
     );
 
+    // If request fails
     if (!playerDataRes.ok) {
-      // Toggle error loader state
+      // Toggle error state
       $appStore.isLoadingError = true;
+      $appStore.isError = true;
+      $appStore.errorMessage = playerDataRes.statusText;
 
       throw Error(playerDataRes.statusText);
     }
 
-    // Toggle error loader state
-    $appStore.isLoadingError = false;
-
     const playerData = await playerDataRes.json();
-
     const player = playerData.leaderboard[0];
 
+    // If the player has no leaderboard data
     if (!player) {
-      // Toggle error loader state
+      // Toggle error state
       $appStore.isLoadingError = true;
+      $appStore.isError = true;
+      $appStore.errorMessage = `no leaderboard Data for ${name}`;
 
       throw Error(`no leaderboard Data for ${name}`);
     }
@@ -87,6 +106,7 @@
     // win rate
     const winRate = Math.round((100 * wins) / games);
 
+    // Save player data in store
     $players.push({
       name: player.name,
       rank,
@@ -99,6 +119,11 @@
   };
 
   const getData = async () => {
+    // Reset error state
+    $appStore.isLoadingError = false;
+    $appStore.isError = false;
+    $appStore.errorMessage = "";
+
     // toggle on loader
     $appStore.isLoading = true;
 
@@ -121,6 +146,11 @@
   };
 
   const refreshData = async () => {
+    // Reset error state
+    $appStore.isLoadingError = false;
+    $appStore.isError = false;
+    $appStore.errorMessage = "";
+
     // toggle on loader
     $appStore.isLoading = true;
 
@@ -131,7 +161,7 @@
     let counter = 0;
 
     const intervalId = setInterval(async () => {
-      await getMatchData($appStore.settings.playerId);
+      await getMatchData($appStore.settings.playerId, intervalId, oldData.id);
 
       // if its old data
       if ($match.id === oldData.id) {
@@ -144,74 +174,67 @@
             $appStore.isLoading = false;
             // reset error state
             $appStore.isLoadingError = false;
-            // reset counter
-            counter = 0;
             // stop searching for data
             clearInterval(intervalId);
           }, 700);
         }
 
-        // else increase counter
+        // else increase counter and try again
         counter++;
-        // and try again
-        return;
+      } else {
+        // if its new data
+        // get new data
+        // TODO: pass match data to getData - we allready have the new matchData here.
+        getData();
+
+        // stop searching for data
+        clearInterval(intervalId);
       }
-
-      // if its new data
-      // get new data
-      getData();
-
-      // reset counter
-      counter = 0;
-      // stop searching for data
-      clearInterval(intervalId);
     }, 1000 * interval);
   };
 </script>
 
 <main class="overlay">
-  {#await getData()}
+  {#if $appStore.isError}
+    <div class="error">
+      <p>{$appStore.errorMessage}</p>
+    </div>
+  {/if}
+  {#if $appStore.isLoading}
     <Loader />
-  {:then}
-    {#if $appStore.isLoading}
-      <Loader />
-    {:else if $appStore.isLoadingOutroEnd}
-      <div
-        class="player0"
-        transition:fly|local={{
-          duration: 2000,
-          x: -600,
-          y: 0,
-          opacity: 1.0,
-          easing: quintOut,
-        }}
-      >
-        <Player index={0} />
-      </div>
-      <div
-        class="matchInfo"
-        in:fade|local={{ duration: 3000 }}
-        out:fade|local={{ duration: 300 }}
-      >
-        <MatchInfo />
-      </div>
-      <div
-        class="player1"
-        transition:fly|local={{
-          duration: 2000,
-          x: 600,
-          y: 0,
-          opacity: 1.0,
-          easing: quintOut,
-        }}
-      >
-        <Player index={1} />
-      </div>
-    {/if}
-  {:catch error}
-    <p class="error">{error.message}</p>
-    <Loader />
-  {/await}
+  {:else if $appStore.isLoadingOutroEnd}
+    <div
+      class="player0"
+      transition:fly|local={{
+        duration: 2000,
+        x: -600,
+        y: 0,
+        opacity: 1.0,
+        easing: quintOut,
+      }}
+    >
+      <Player index={0} />
+    </div>
+    <div
+      class="matchInfo"
+      in:fade|local={{ duration: 3000 }}
+      out:fade|local={{ duration: 300 }}
+    >
+      <MatchInfo />
+    </div>
+    <div
+      class="player1"
+      transition:fly|local={{
+        duration: 2000,
+        x: 600,
+        y: 0,
+        opacity: 1.0,
+        easing: quintOut,
+      }}
+    >
+      <Player index={1} />
+    </div>
+  {/if}
 </main>
 
 <style>
@@ -243,6 +266,13 @@
   }
 
   .error {
+    background-color: #0c0c0c7e;
+    min-width: 1030px;
+    min-height: 80px;
+    opacity: 0.8;
+  }
+
+  .error p {
     position: absolute;
     top: 50%;
     left: 50%;

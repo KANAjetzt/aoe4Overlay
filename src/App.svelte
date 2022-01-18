@@ -8,9 +8,7 @@
 
   onMount(() => {
     window.electron.on("sendSettings", (e, settings) => {
-      console.log("reciving settings!");
       $appStore.settings = settings;
-      console.log($appStore.settings);
 
       // main window if player id is there else show settings window
       $appStore.settings.playerId
@@ -30,6 +28,3 @@
     <Settings />
   {/if}
 {/if}
-
-<style>
-</style>

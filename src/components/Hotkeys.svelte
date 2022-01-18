@@ -154,7 +154,10 @@
 
   // multiple modifiers and a single key code
   const captureHotkey = () => {
-    // reset
+    // reset error message
+    errorMessage = "";
+
+    // reset hotkey data
     $appStore.settings.hotkeys[action] = "";
     isKeySet = false;
 

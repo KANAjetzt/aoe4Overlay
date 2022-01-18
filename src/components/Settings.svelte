@@ -3,20 +3,24 @@
   import Hotkeys from "./Hotkeys.svelte";
   import PlayerSearch from "./PlayerSearch.svelte";
 
-  let isSettingsSaved = false;
-  let isError = false;
-  let errorMessage = "";
-
   const saveSettings = async (e) => {
+    if (!$appStore.settings.playerId) {
+      $appStore.isError = true;
+      $appStore.errorMessage = "No player data";
+      return;
+    }
+
     const res = await window.electron.invoke("settings", $appStore.settings);
 
     console.log(res);
 
     if (res.status === "success") {
-      isSettingsSaved = true;
+      $appStore.isSettingsSaved = true;
+
+      console.log($appStore.settings);
     } else {
-      isError = true;
-      errorMessage = res.message;
+      $appStore.isError = true;
+      $appStore.errorMessage = res.message;
     }
   };
 
@@ -38,10 +42,10 @@
 
   <button class="btnSave" on:click={saveSettings}
     >save
-    <div class="doneIcon {isSettingsSaved ? 'start' : ''}" />
+    <div class="doneIcon {$appStore.isSettingsSaved ? 'start' : ''}" />
   </button>
-  {#if isError}
-    <p class="errorMessage">{errorMessage}</p>
+  {#if $appStore.isError}
+    <p class="errorMessage">{$appStore.errorMessage}</p>
   {/if}
 </main>
 

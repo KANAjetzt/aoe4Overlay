@@ -8,17 +8,12 @@ const asyncWriteFile = promisify(fs.writeFile);
 const asyncReadFile = promisify(fs.readFile);
 
 let settings = {
-  profileId: null,
+  playerId: null,
   hotkeys: {
     refresh: "Alt+CommandOrControl+R",
     hide: "Alt+CommandOrControl+H",
   },
 };
-
-// auto reload reloads the page when I invoke something from render?!
-// try {
-//   require("electron-reloader")(module);
-// } catch (_) {}
 
 async function createSettingsWindow() {
   // Create the browser window.
@@ -109,6 +104,12 @@ async function createWindow() {
   // ### Hotkeys ###
   // Get new data
   globalShortcut.register(settings.hotkeys.refresh, () => {
+    // Only allow every 60 sec.
+    // TODO: Save interval settings here and send them to render
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (timeStamp60sec && currentTime <= timeStamp60sec) return;
+
+    timeStamp60sec = Math.floor(Date.now() / 1000) + 60;
     mainWindow.webContents.send("refresh");
   });
 
@@ -147,8 +148,19 @@ app.whenReady().then(async () => {
 
   // if its there
   if (isSettingsFile) {
-    // Open main window
-    createWindow();
+    // Load settings
+    const settingsFile = await asyncReadFile(
+      `${app.getPath("userData")}/settings.json`
+    );
+    settings = JSON.parse(settingsFile);
+
+    if (settings.playerId) {
+      // Open main window
+      createWindow();
+    } else {
+      createSettingsWindow();
+    }
+
     // Else open settings window
   } else {
     createSettingsWindow();
