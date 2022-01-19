@@ -2,53 +2,31 @@
 const { app, BrowserWindow, globalShortcut, ipcMain } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const EventEmitter = require("events");
 const { promisify } = require("util");
 
 const asyncWriteFile = promisify(fs.writeFile);
 const asyncReadFile = promisify(fs.readFile);
 
-let settings = {
-  playerId: null,
-  hotkeys: {
-    refresh: "Alt+CommandOrControl+R",
-    hide: "Alt+CommandOrControl+H",
-  },
-};
+class MyEmitter extends EventEmitter {}
+const myEmitter = new MyEmitter();
 
-async function createSettingsWindow() {
-  // Create the browser window.
-  const settingsWindow = new BrowserWindow({
-    width: 1030,
-    height: 800,
-    frame: false,
-    resizable: false,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
-    },
-  });
-
-  settingsWindow.loadFile(`${__dirname}/public/index.html`);
-
-  // settingsWindow.webContents.openDevTools();
-
-  settingsWindow.on("ready-to-show", () => {
-    // Send settings
-    settingsWindow.webContents.send("sendSettings", settings);
-  });
-
+async function saveSettings() {
   ipcMain.handle("settings", async (e, args) => {
     const settings = JSON.stringify(args);
 
     try {
+      // Save settings to json file
       await asyncWriteFile(
         `${app.getPath("userData")}/settings.json`,
         settings
       );
 
-      setTimeout(async () => {
-        settingsWindow.hide();
-        createWindow();
-      }, 500);
+      myEmitter.emit("savedsettings", {
+        status: "success",
+        message: "Settings file saved!",
+        data: args,
+      });
 
       return {
         status: "success",
@@ -63,43 +41,33 @@ async function createSettingsWindow() {
   });
 }
 
-async function createWindow() {
-  // Load settings
-  const settingsFile = await asyncReadFile(
-    `${app.getPath("userData")}/settings.json`
-  );
-  settings = JSON.parse(settingsFile);
-
-  // We cannot require the screen module until the app is ready.
-  const { screen } = require("electron");
-
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 1030,
-    height: 80,
-    x: width * 0.5 - 1030 * 0.5,
-    y: 0,
-    frame: false,
-    transparent: true,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+async function loadSettings() {
+  let settings = {
+    playerId: null,
+    hotkeys: {
+      refresh: "Alt+Control+R",
+      hide: "Alt+Control+H",
     },
-  });
+  };
 
-  mainWindow.setAlwaysOnTop(true, "normal");
-  mainWindow.setIgnoreMouseEvents(true);
+  // Check if settings file exists
+  const isSettingsFile = fs
+    .readdirSync(app.getPath("userData"))
+    .includes("settings.json");
 
-  // and load the index.html of the app.
-  mainWindow.loadFile(`${__dirname}/public/index.html`);
-  // Make sure its visible
-  mainWindow.showInactive();
+  // if its there
+  if (isSettingsFile) {
+    // Load settings
+    const settingsFile = await asyncReadFile(
+      `${app.getPath("userData")}/settings.json`
+    );
+    settings = JSON.parse(settingsFile);
+  }
+  return settings;
+}
 
-  // Open the DevTools.
-  // TODO: If I keep working on this - add .env file
-  // mainWindow.webContents.openDevTools();
+async function handleHotkeys(mainWindow, settings) {
+  let timeStamp60sec = null;
 
   // ### Hotkeys ###
   // Get new data
@@ -130,42 +98,102 @@ async function createWindow() {
       mainWindow.setSize(1030, 80);
     }
   });
+}
+
+async function createSettingsWindow(settings) {
+  // Create the browser window.
+  const settingsWindow = new BrowserWindow({
+    width: 1030,
+    height: 800,
+    frame: false,
+    resizable: false,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  settingsWindow.loadFile(`${__dirname}/public/index.html`);
+
+  // settingsWindow.webContents.openDevTools();
+
+  settingsWindow.on("ready-to-show", () => {
+    // Send settings
+    settingsWindow.webContents.send("sendSettings", settings);
+  });
+
+  return settingsWindow;
+}
+
+async function createWindow(settings) {
+  // We cannot require the screen module until the app is ready.
+  const { screen } = require("electron");
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width, height } = primaryDisplay.workAreaSize;
+
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 1030,
+    height: 80,
+    x: width * 0.5 - 1030 * 0.5,
+    y: 0,
+    frame: false,
+    transparent: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+    },
+  });
+
+  mainWindow.setAlwaysOnTop(true, "normal");
+  mainWindow.setIgnoreMouseEvents(true);
+
+  // and load the index.html of the app.
+  mainWindow.loadFile(`${__dirname}/public/index.html`);
+
+  // Open the DevTools.
+  // TODO: If I keep working on this - add .env file
+  // mainWindow.webContents.openDevTools();
 
   mainWindow.on("ready-to-show", () => {
     // Send settings
     mainWindow.webContents.send("sendSettings", settings);
+    // Make sure its visible
+    mainWindow.show();
   });
+
+  return mainWindow;
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
-  // Check if settings file exists
-  const isSettingsFile = fs
-    .readdirSync(app.getPath("userData"))
-    .includes("settings.json");
+  // Load Settings
+  const settings = await loadSettings();
 
-  // if its there
-  if (isSettingsFile) {
-    // Load settings
-    const settingsFile = await asyncReadFile(
-      `${app.getPath("userData")}/settings.json`
-    );
-    settings = JSON.parse(settingsFile);
-
-    if (settings.playerId) {
-      // Open main window
-      createWindow();
-    } else {
-      createSettingsWindow();
-    }
-
-    // Else open settings window
+  // Check if settings where configured before
+  if (settings.playerId) {
+    // Open main window
+    const mainWindow = await createWindow(settings);
+    handleHotkeys(mainWindow, settings);
   } else {
-    createSettingsWindow();
+    const settingsWindow = await createSettingsWindow(settings);
+    saveSettings();
+
+    // If settings are saved
+    myEmitter.on("savedsettings", (e) => {
+      const settings = e.data;
+      setTimeout(async () => {
+        // Hide settings window
+        settingsWindow.hide();
+        // and open main window
+        const mainWindow = await createWindow(settings);
+        handleHotkeys(mainWindow, settings);
+      }, 500);
+    });
   }
 
+  // close gets send when the X button is clicked on the settings window
   ipcMain.handle("close", () => {
     app.quit();
   });
