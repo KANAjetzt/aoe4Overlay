@@ -16,6 +16,34 @@
       `url(../static/bg/bg${$players[index].civ}.png)`
     );
   });
+
+  const handleStreakStyle = () => {
+    const streak = $players[index].streak;
+    let streakStyle = "";
+
+    switch (true) {
+      case streak < 0:
+        streakStyle = "streakLoosing";
+        break;
+
+      case streak === 0:
+        streakStyle = "streakNeutral";
+        break;
+
+      case streak <= 5:
+        streakStyle = "streakWinning";
+        break;
+
+      case streak <= 6:
+        streakStyle = "streakOnFire";
+        break;
+
+      default:
+        break;
+    }
+
+    return `streak ${streakStyle}`;
+  };
 </script>
 
 <div class="player player{index} {isCiv ? `` : 'noCiv'}">
@@ -33,8 +61,9 @@
       <li>#{$players[index].rank}</li>
       <li>{$players[index].elo}</li>
       <li>{$players[index].winRate}%</li>
-      <li>W {$players[index].wins}</li>
-      <li>L {$players[index].losses}</li>
+      <li class={handleStreakStyle()}>{$players[index].streak}</li>
+      <li class="wins">W {$players[index].wins}</li>
+      <li class="losses">L {$players[index].losses}</li>
     </ul>
   </div>
 </div>
@@ -55,7 +84,7 @@
   ul {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(5, max-content);
+    grid-template-columns: repeat(6, max-content);
   }
 
   li {
@@ -63,16 +92,66 @@
     word-spacing: -2px;
   }
 
-  ul :nth-child(n + 4) {
+  .wins,
+  .losses,
+  .streak {
     font-weight: bold;
   }
 
-  ul :nth-child(4) {
+  .wins {
     color: #85ffa5;
   }
 
-  ul :nth-child(5) {
+  .losses {
     color: #ff8585;
+  }
+
+  .streak {
+    display: flex;
+    align-items: center;
+  }
+  .streak::after {
+    content: "";
+    display: block;
+    width: 13px;
+    height: 13px;
+    margin-left: 2px;
+  }
+
+  .streakNeutral {
+    color: #eee;
+  }
+  .streakNeutral::after {
+    background: #eee;
+    -webkit-mask-image: url(../static/icon/winning-streak01.svg);
+    -webkit-mask-repeat: no-repeat;
+  }
+
+  .streakWinning {
+    color: #85ffa5;
+  }
+  .streakWinning::after {
+    background: #85ffa5;
+    -webkit-mask-image: url(../static/icon/winning-streak01.svg);
+    -webkit-mask-repeat: no-repeat;
+  }
+
+  .streakOnFire {
+    color: #85ffa5;
+  }
+  .streakOnFire::after {
+    background: #85ffa5;
+    -webkit-mask-image: url(../static/icon/winning-fire.svg);
+    -webkit-mask-repeat: no-repeat;
+  }
+
+  .streakLoosing {
+    color: #ff8585;
+  }
+  .streakLoosing::after {
+    background: #ff8585;
+    -webkit-mask-image: url(../static/icon/losing-streak.svg);
+    -webkit-mask-repeat: no-repeat;
   }
 
   .player {

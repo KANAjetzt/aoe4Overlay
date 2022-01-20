@@ -101,7 +101,7 @@
       throw Error(`no leaderboard Data for ${name}`);
     }
 
-    const { rank, rating: elo, games, wins, losses } = player;
+    const { rank, rating: elo, games, wins, losses, streak } = player;
 
     // win rate
     const winRate = Math.round((100 * wins) / games);
@@ -115,6 +115,7 @@
       wins,
       losses,
       winRate,
+      streak,
     });
   };
 
@@ -130,7 +131,7 @@
     // clear match store
     $match = {};
 
-    // clear players sotre
+    // clear players store
     $players = [];
 
     await getMatchData($appStore.settings.playerId);
@@ -244,9 +245,6 @@
     background-color: #0c0c0c7e;
     min-width: 1030px;
     min-height: 80px;
-    /* background-blend-mode: multiply;
-  background-image: url(static/bg/textile.png),
-    linear-gradient(#394766, #181c29a1); */
     opacity: 0.8;
   }
 
