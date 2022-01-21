@@ -24,9 +24,7 @@
     const playerDataRes = await fetch(
       `https://aoeiv.net/api/leaderboard?game=aoe4&leaderboard_id=17&search=${playerName}&start=1&count=1`
     );
-    console.log(playerDataRes);
     const playerData = await playerDataRes.json();
-    console.log(playerData);
     const player = playerData.leaderboard[0];
 
     // if no player was found
@@ -51,6 +49,7 @@
       games,
       wins,
       losses,
+      streak,
     } = player;
 
     // win rate
@@ -65,6 +64,7 @@
       wins,
       losses,
       winRate,
+      streak,
     };
 
     // Hide loading bar
